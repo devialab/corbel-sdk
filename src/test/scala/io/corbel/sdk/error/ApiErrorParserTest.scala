@@ -1,13 +1,13 @@
-package io.corbel.sdk.internal
+package io.corbel.sdk.error
 
 import java.io.ByteArrayInputStream
 
 import com.ning.http.client.Response
 import org.json4s.JsonAST.JObject
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, FlatSpec}
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)

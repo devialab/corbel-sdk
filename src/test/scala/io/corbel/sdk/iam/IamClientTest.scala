@@ -1,7 +1,7 @@
-package io.corbel.sdk.internal
+package io.corbel.sdk.iam
 
-import io.corbel.sdk.{ApiError, AuthenticationResponse, ClientCredentials}
 import io.corbel.sdk.config.CorbelConfig
+import io.corbel.sdk.error.ApiError
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.HttpRequest._
@@ -9,7 +9,8 @@ import org.mockserver.model.HttpResponse._
 import org.mockserver.model.JsonSchemaBody._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**

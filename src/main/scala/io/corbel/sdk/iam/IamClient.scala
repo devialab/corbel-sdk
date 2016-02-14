@@ -1,19 +1,19 @@
-package io.corbel.sdk.internal
+package io.corbel.sdk.iam
 
 import com.ning.http.client.Response
-import io.corbel.sdk._
+import dispatch._
 import io.corbel.sdk.config.CorbelConfig
+import io.corbel.sdk.error.ApiError
+import io.corbel.sdk.error.ApiError._
 import io.corbel.sdk.http.CorbelHttpClient
+import io.corbel.sdk.iam.IamClient._
 import org.json4s.DefaultFormats
-import _root_.scala.concurrent.{ExecutionContext, Future}
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization._
-import pdi.jwt.{JwtAlgorithm, Jwt}
-import dispatch._
+import pdi.jwt.{Jwt, JwtAlgorithm}
 
-import IamClient._
-import ApiError._
+import _root_.scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Iam interface implementation

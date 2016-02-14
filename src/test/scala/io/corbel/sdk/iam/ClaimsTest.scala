@@ -1,8 +1,8 @@
-package io.corbel.sdk
+package io.corbel.sdk.iam
 
-import org.json4s.JsonAST.{JValue, JString, JObject}
-import org.scalatest.{Matchers, FlatSpec}
+import org.json4s.JsonAST.{JString, JValue}
 import org.json4s.native.JsonMethods._
+import org.scalatest.{FlatSpec, Matchers}
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */

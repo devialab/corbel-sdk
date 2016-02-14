@@ -1,4 +1,4 @@
-package io.corbel.sdk
+package io.corbel.sdk.iam
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)

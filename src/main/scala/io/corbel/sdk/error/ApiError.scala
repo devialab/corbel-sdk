@@ -1,7 +1,6 @@
-package io.corbel.sdk
+package io.corbel.sdk.error
 
 import com.ning.http.client.Response
-import io.corbel.sdk.internal.ApiErrorParser
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)

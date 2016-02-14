@@ -1,4 +1,6 @@
-package io.corbel.sdk
+package io.corbel.sdk.iam
+
+import io.corbel.sdk.error.ApiError
 
 import scala.concurrent.{ExecutionContext, Future}
 

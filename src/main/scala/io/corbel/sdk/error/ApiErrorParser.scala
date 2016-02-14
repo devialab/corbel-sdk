@@ -1,10 +1,9 @@
-package io.corbel.sdk.internal
+package io.corbel.sdk.error
 
 import com.ning.http.client.Response
 import grizzled.slf4j.Logging
-import io.corbel.sdk.ApiError
 import org.json4s.DefaultFormats
-import org.json4s.JsonAST.{JValue, JString, JObject}
+import org.json4s.JsonAST.JValue
 import org.json4s.native.JsonMethods._
 
 import scala.util.{Success, Try}

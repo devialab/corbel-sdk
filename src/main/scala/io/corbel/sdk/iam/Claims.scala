@@ -1,4 +1,4 @@
-package io.corbel.sdk
+package io.corbel.sdk.iam
 
 import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
