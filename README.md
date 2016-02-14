@@ -1,2 +1,2 @@
 # corbel-sdk
-Corbel SDK for JVM
+Corbel SDK for JVM languages
