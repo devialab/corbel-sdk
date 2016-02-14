@@ -1,6 +1,6 @@
 package io.corbel.sdk
 
-import _root_.scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
