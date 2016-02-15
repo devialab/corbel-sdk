@@ -127,6 +127,32 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "createUserGroup"
+
+  it should "make request to POST user group" in {
+    mockServer
+      .when(createUserGroupRequest)
+      .respond(
+        response()
+          .withStatusCode(201)
+          .withHeader("Content-Type", "application/json")
+          .withHeader("Location", "http://iam/v1.0/group/123")
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.createUserGroup(UserGroup(
+      name = Some("test-group"),
+      domain = Some("test"),
+      scopes = Some(Seq("test-scope"))
+    ))
+
+    whenReady(futureResponse) { response =>
+      response should be(Right("123"))
+    }
+
+  }
+
 
   /* ---------------- helper methods -- */
   def authenticationRequest = request()
@@ -146,6 +172,20 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
       .withMethod("GET")
       .withPath(s"/v1.0/user/$userId")
       .withHeader("Authorization", s"Bearer $testToken")
+
+  def createUserGroupRequest = request()
+      .withMethod("POST")
+      .withPath("/v1.0/group")
+      .withHeader("Authorization", s"Bearer $testToken")
+      .withBody(jsonSchema(
+        """
+          |{
+          | "type":"object", "properties":{
+          |   "assertion": {"type": "string"},
+          |   "grant_type": {"type": "string"}
+          | }
+          |}
+        """.stripMargin))
 
   before {
     mockServer = startClientAndServer(1080)

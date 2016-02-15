@@ -1,0 +1,3 @@
+- service: sbt
+  command: sbt test publish
+  encrypted_dockercfg_path: dockercfg.encrypted

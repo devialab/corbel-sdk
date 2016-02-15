@@ -14,3 +14,16 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
   "org.mock-server" % "mockserver-netty" % "3.10.1" % "test" exclude("ch.qos.logback", "logback-classic")
 )
+
+//publish settings
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
+
+publishMavenStyle := true
+
+publishTo := {
+  val artifactory = "http://artifacts.devialab.com/artifactory/"
+  if (isSnapshot.value)
+    Some("snapshots" at artifactory + "devialab-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
+  else
+    Some("releases"  at artifactory + "devialab-release-local")
+}

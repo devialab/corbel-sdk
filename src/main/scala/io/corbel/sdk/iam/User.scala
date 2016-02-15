@@ -11,6 +11,7 @@ case class User(
                  username: Option[String] = None,
                  email: Option[String] = None,
                  firstName: Option[String] = None,
+                 lastName: Option[String] = None,
                  scopes: Option[Seq[String]] = None,
                  properties: Option[JObject] = None
                )
