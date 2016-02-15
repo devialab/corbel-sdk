@@ -1,7 +1,9 @@
 package io.corbel.sdk.iam
 
+import io.corbel.sdk.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
+import org.json4s.JsonAST.JObject
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.HttpRequest._
@@ -28,6 +30,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   )
   val clientId = "123"
   val cleintSecret = "567"
+  val testToken = "AAAABBBCCCC"
 
   behavior of "authenticate"
 
@@ -83,6 +86,49 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "getUser"
+
+  it should "make request to GET user by Id" in {
+    val userId = "123"
+    mockServer
+      .when(getUserRequest(userId))
+      .respond(
+        response()
+          .withStatusCode(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              |{
+              |  "id": "fdad3eaa19ddec84b397a9e9a2312262",
+              |  "domain": "silkroad",
+              |  "email": "alexander.deleon@bqreaders.com",
+              |  "username": "alexander.deleon@bqreaders.com",
+              |  "firstName": "alex",
+              |  "scopes": [],
+              |  "properties": {}
+              |}
+            """.stripMargin)
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.getUser(userId)
+
+    whenReady(futureResponse) { response =>
+      response should be(Right(User(
+        id = Some("fdad3eaa19ddec84b397a9e9a2312262"),
+        domain = Some("silkroad"),
+        email = Some("alexander.deleon@bqreaders.com"),
+        firstName = Some("alex"),
+        username = Some("alexander.deleon@bqreaders.com"),
+        scopes = Some(Seq.empty),
+        properties = Some(JObject())
+      )))
+    }
+  }
+
+
+  /* ---------------- helper methods -- */
   def authenticationRequest = request()
     .withMethod("POST")
     .withPath("/v1.0/oauth/token")
@@ -95,6 +141,11 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
         | }
         |}
       """.stripMargin))
+
+  def getUserRequest(userId: String) = request()
+      .withMethod("GET")
+      .withPath(s"/v1.0/user/$userId")
+      .withHeader("Authorization", s"Bearer $testToken")
 
   before {
     mockServer = startClientAndServer(1080)

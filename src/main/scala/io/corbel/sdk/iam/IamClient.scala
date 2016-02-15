@@ -2,6 +2,7 @@ package io.corbel.sdk.iam
 
 import com.ning.http.client.Response
 import dispatch._
+import io.corbel.sdk.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
@@ -12,8 +13,10 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization._
 import pdi.jwt.{Jwt, JwtAlgorithm}
+import CorbelHttpClient._
 
 import _root_.scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 /**
   * Iam interface implementation
@@ -46,16 +49,25 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
+  override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
+    val req = jsonApi(iam / `user/me`).withAuth
+    http(req > as[User].eitherApiError)
+  }
+
+  override def getUser(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
+    val req = jsonApi(iam / `user/{id}`(id)).withAuth
+    http(req > as[User].eitherApiError)
+  }
+
   private def doAuthenticate(assertionParam: String)(implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val req = (iam / `oauth/token`).jsonContentType <<
+    val req = jsonApi(iam / `oauth/token`) <<
       compact(render((assertion -> assertionParam) ~ (grant_type -> `jwt-bearer`)))
-    http(req > asAuthenticationResponse.eitherApiError)
+    http(req > as[AuthenticationResponse].eitherApiError)
   }
 
   private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HmacSHA256)
 
-  private val asAuthenticationResponse = (response: Response) =>
-    read[AuthenticationResponse](response.getResponseBodyAsStream)
+  private def as[T](implicit ct: Manifest[T]) = (response: Response) => read[T](response.getResponseBodyAsStream)
 
 }
 
@@ -66,6 +78,8 @@ object IamClient {
 
   //endpoints
   private val `oauth/token` = "v1.0/oauth/token"
+  private def `user/{id}`(id: String) = s"v1.0/user/$id"
+  private val `user/me` = `user/{id}`("me")
 
   private val assertion = "assertion"
   private val grant_type = "grant_type"

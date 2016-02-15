@@ -1,5 +1,6 @@
 package io.corbel.sdk.http
 
+import io.corbel.sdk.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import dispatch._
 
@@ -11,19 +12,24 @@ trait CorbelHttpClient {
   val http = Http()
 
   trait CorbelService {
-    def /(path: String)(implicit config: CorbelConfig): ReqWarpper
+    def /(path: String)(implicit config: CorbelConfig): CorbelRequest
   }
   object iam extends CorbelService {
-    override def /(path: String)(implicit config: CorbelConfig): ReqWarpper = url(s"${config.iamBaseUri}/$path")
+    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.iamBaseUri}/$path")
   }
   object resources extends CorbelService {
-    override def /(path: String)(implicit config: CorbelConfig): ReqWarpper = url(s"${config.resourceBaseUri}/$path")
+    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.resourceBaseUri}/$path")
   }
 }
 
 object CorbelHttpClient {
-  implicit class ReqWarpper(val req: Req) extends AnyVal {
-    def jsonContentType = req.setContentType("application/json", "UTF-8")
-    def acceptJson = req.setHeader("Accept", "application/json")
+
+  def jsonApi(req: CorbelRequest): Req = req.jsonContentType.acceptJson
+
+  implicit class CorbelRequest(val req: Req) extends AnyVal {
+    def withAuth(implicit authenticationProvider: AuthenticationProvider): Req = withAuth(authenticationProvider())
+    def withAuth(token: String): Req = req.setHeader("Authorization", s"Bearer $token")
+    def jsonContentType: Req = req.setContentType("application/json", "UTF-8")
+    def acceptJson: Req = req.setHeader("Accept", "application/json")
   }
 }
