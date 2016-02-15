@@ -12,6 +12,5 @@ libraryDependencies ++= Seq(
   // Test dependencies
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
-  "org.specs2" %% "specs2-core" % "3.0" % "test",
   "org.mock-server" % "mockserver-netty" % "3.10.1" % "test" exclude("ch.qos.logback", "logback-classic")
 )
