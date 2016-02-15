@@ -3,6 +3,7 @@ package io.corbel.sdk.http
 import io.corbel.sdk.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import dispatch._
+import org.jboss.netty.handler.codec.http.HttpHeaders
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
@@ -28,8 +29,8 @@ object CorbelHttpClient {
 
   implicit class CorbelRequest(val req: Req) extends AnyVal {
     def withAuth(implicit authenticationProvider: AuthenticationProvider): Req = withAuth(authenticationProvider())
-    def withAuth(token: String): Req = req.setHeader("Authorization", s"Bearer $token")
+    def withAuth(token: String): Req = req.setHeader(HttpHeaders.Names.AUTHORIZATION, s"Bearer $token")
     def jsonContentType: Req = req.setContentType("application/json", "UTF-8")
-    def acceptJson: Req = req.setHeader("Accept", "application/json")
+    def acceptJson: Req = req.setHeader(HttpHeaders.Names.ACCEPT, "application/json")
   }
 }

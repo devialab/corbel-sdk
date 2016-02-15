@@ -8,6 +8,7 @@ import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
 import io.corbel.sdk.http.CorbelHttpClient
 import io.corbel.sdk.iam.IamClient._
+import org.jboss.netty.handler.codec.http.HttpHeaders
 import org.json4s.DefaultFormats
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -16,7 +17,6 @@ import pdi.jwt.{Jwt, JwtAlgorithm}
 import CorbelHttpClient._
 
 import _root_.scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
 
 /**
   * Iam interface implementation
@@ -59,6 +59,16 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
     http(req > as[User].eitherApiError)
   }
 
+  override def createUserGroup(userGroup: UserGroup)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
+    val req = jsonApi(iam / group).withAuth << write(userGroup)
+    http(req > response.eitherApiError).map(resp => resp.right.map {
+      _.getHeader(HttpHeaders.Names.LOCATION) match {
+        case GroupId(id) => id
+        case loc => throw new IllegalStateException(s"Expecting correct group URI in Location header. I got $loc")
+      }
+    })
+  }
+
   private def doAuthenticate(assertionParam: String)(implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
     val req = jsonApi(iam / `oauth/token`) <<
       compact(render((assertion -> assertionParam) ~ (grant_type -> `jwt-bearer`)))
@@ -68,7 +78,7 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HmacSHA256)
 
   private def as[T](implicit ct: Manifest[T]) = (response: Response) => read[T](response.getResponseBodyAsStream)
-
+  private def response = (response: Response) => response
 }
 
 
@@ -80,9 +90,12 @@ object IamClient {
   private val `oauth/token` = "v1.0/oauth/token"
   private def `user/{id}`(id: String) = s"v1.0/user/$id"
   private val `user/me` = `user/{id}`("me")
+  private val group = "v1.0/group"
 
   private val assertion = "assertion"
   private val grant_type = "grant_type"
   private val `jwt-bearer` = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+
+  private val GroupId = """.*/group/(\w*)$""".r
 }
 
