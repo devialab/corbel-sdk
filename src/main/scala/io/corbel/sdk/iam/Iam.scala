@@ -27,7 +27,7 @@ trait Iam {
 
   def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]]
 
-  def addUserGroups(id: String, groups: Set[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,Any]]
+  def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,Unit]]
 
   /* ----------------- Groups ---------------------- */
 

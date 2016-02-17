@@ -7,6 +7,7 @@ import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
 import io.corbel.sdk.http.CorbelHttpClient
+import io.corbel.sdk.iam.Claims.RefreshToken
 import io.corbel.sdk.iam.IamClient._
 import org.jboss.netty.handler.codec.http.HttpHeaders
 import org.json4s.DefaultFormats
@@ -29,45 +30,39 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
 
   override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)
                                     (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val claims = Claims()
-      .addClientCredentials(clientCredentials)
-      .addRefreshToken(refreshToken)
-      .addOptions(authenticationOptions)
+    val claims = Claims.default() + clientCredentials + RefreshToken(refreshToken) + authenticationOptions
 
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
   override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)
                            (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    var claims = Claims()
-      .addClientCredentials(clientCredentials)
-      .addOptions(authenticationOptions)
-      .addExp(config.tokenExpTime + System.currentTimeMillis() / 1000)
+    var claims = Claims.default() + clientCredentials + authenticationOptions
 
     for (userCredentials <- userCredentials) {
-      claims = claims.addUserCredentials(userCredentials)
+      claims += userCredentials
     }
 
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
   override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
-    val req = jsonApi(iam / `user/me`).withAuth
+    val req = (iam / `user/me`).json.withAuth
     http(req > as[User].eitherApiError)
   }
 
   override def getUser(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
-    val req = jsonApi(iam / `user/{id}`(id)).withAuth
+    val req = (iam / `user/{id}`(id)).json.withAuth
     http(req > as[User].eitherApiError)
   }
 
-  override def addUserGroups(id: String, groups: Set[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Any]] = {
-    val req = jsonApi(iam / `user/{id}/groups`(id)).withAuth << write(groups)
-    http(req.PUT > response.eitherApiError)
+  override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = {
+    val req = (iam / `user/{id}/groups`(userId)).json.withAuth << write(groups)
+    http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
   }
 
   override def createGroup(userGroup: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
-    val req = jsonApi(iam / group).withAuth << write(userGroup)
+    val req = (iam / group).json.withAuth << write(userGroup)
     http(req > response.eitherApiError).map(resp => resp.right.map {
       _.getHeader(HttpHeaders.Names.LOCATION) match {
         case GroupId(id) => id
@@ -77,7 +72,7 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   }
 
   private def doAuthenticate(assertionParam: String)(implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val req = (iam / `oauth/token`).formContentType.acceptJson << Seq((assertion, assertionParam),(grant_type, `jwt-bearer`))
+    val req = (iam / `oauth/token`).formUrlEncoded.acceptJson << Seq((assertion, assertionParam),(grant_type, `jwt-bearer`))
     http(req > as[AuthenticationResponse].eitherApiError)
   }
 

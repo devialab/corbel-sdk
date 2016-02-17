@@ -25,13 +25,12 @@ trait CorbelHttpClient {
 
 object CorbelHttpClient {
 
-  def jsonApi(req: CorbelRequest): Req = req.jsonContentType.acceptJson
-
   implicit class CorbelRequest(val req: Req) extends AnyVal {
+    def json = req.jsonContentType.acceptJson
+    def formUrlEncoded = req.setContentType("application/x-www-form-urlencoded", "UTF-8")
     def withAuth(implicit authenticationProvider: AuthenticationProvider): Req = withAuth(authenticationProvider())
     def withAuth(token: String): Req = req.setHeader(HttpHeaders.Names.AUTHORIZATION, s"Bearer $token")
     def jsonContentType: Req = req.setContentType("application/json", "UTF-8")
-    def formContentType: Req = req.setContentType("application/x-www-form-urlencoded", "UTF-8")
     def acceptJson: Req = req.setHeader(HttpHeaders.Names.ACCEPT, "application/json")
   }
 }
