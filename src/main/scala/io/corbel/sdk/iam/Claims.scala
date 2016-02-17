@@ -17,6 +17,7 @@ object Claims {
   val version = "version"
   val device_id = "device_id"
   val prn = "prn"
+  val exp = "exp"
   object oauth {
     val service = "oauth.service"
     val redirect_uri = "oauth.redirect_uri"
@@ -34,6 +35,7 @@ object Claims {
 }
 
 class Claims(c: JObject = Claims.aud -> "http://iam.corbel.io") {
+
   import Claims._
   def addClientCredentials(clientCredentials: ClientCredentials) =
     new Claims(c ~ (iss -> clientCredentials.clientId))
@@ -72,6 +74,8 @@ class Claims(c: JObject = Claims.aud -> "http://iam.corbel.io") {
     }
     new Claims(claims)
   }
+  def addExp(expTokenTime: Long) =
+    new Claims(c ~ (exp -> expTokenTime))
 
   def toJson: String = compact(render(c))
 }

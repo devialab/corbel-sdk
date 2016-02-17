@@ -26,7 +26,8 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   var mockServer: ClientAndServer = null
   implicit val config = CorbelConfig(
     iamBaseUri = "http://localhost:1080",
-    resourceBaseUri = "http://localhost:1080"
+    resourceBaseUri = "http://localhost:1080",
+    tokenExpTime = 300000
   )
   val clientId = "123"
   val cleintSecret = "567"
@@ -141,7 +142,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
     implicit val auth = AuthenticationProvider(testToken)
     val iam = IamClient()
-    val futureResponse = iam.createUserGroup(UserGroup(
+    val futureResponse = iam.createGroup(Group(
       name = Some("test-group"),
       domain = Some("test"),
       scopes = Some(Seq("test-scope"))

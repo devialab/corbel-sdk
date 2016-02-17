@@ -1,6 +1,6 @@
 package io.corbel.sdk.iam
 
-import org.json4s.JsonAST.{JString, JValue}
+import org.json4s.JsonAST.{JInt, JString, JValue}
 import org.json4s.native.JsonMethods._
 import org.scalatest.{FlatSpec, Matchers}
 /**
@@ -25,6 +25,24 @@ class ClaimsTest extends FlatSpec with Matchers {
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveRefreshToken(json, refreshToken)
+  }
+
+  it should "add refresh_token and exp" in {
+    val exp = 3000
+    val refreshToken = "123"
+    val claims = Claims().addRefreshToken(refreshToken).addExp(exp)
+    val json = parse(claims.toJson)
+    shouldHaveAudience(json)
+    shouldHaveExp(json, exp)
+    shouldHaveRefreshToken(json, refreshToken)
+  }
+
+  it should "add exp" in {
+    val exp = 3000
+    val claims = Claims().addExp(exp)
+    val json = parse(claims.toJson)
+    shouldHaveAudience(json)
+    shouldHaveExp(json, exp)
   }
 
   it should "add options" in {
@@ -81,6 +99,9 @@ class ClaimsTest extends FlatSpec with Matchers {
   def shouldHaveRefreshToken(json: JValue, value: String) =
     hasValue(json,"refresh_token",value)
 
+  def shouldHaveExp(json: JValue, value: Long) =
+    hasValue(json,"exp",value)
+
   def shouldHaveVersion(json: JValue, value: String) =
     hasValue(json,"version",value)
 
@@ -114,4 +135,7 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   def hasValue(json: JValue, key: String, value: String) =
     (json \ key) should be(JString(value))
+
+  def hasValue(json: JValue, key: String, value: Long) =
+    (json \ key) should be(JInt(value))
 }

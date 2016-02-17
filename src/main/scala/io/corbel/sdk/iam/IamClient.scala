@@ -39,12 +39,14 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
 
   override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)
                            (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val claims = Claims()
+    var claims = Claims()
       .addClientCredentials(clientCredentials)
+      .addOptions(authenticationOptions)
+      .addExp(config.tokenExpTime + System.currentTimeMillis() / 1000)
+
     for (userCredentials <- userCredentials) {
-      claims.addUserCredentials(userCredentials)
+      claims = claims.addUserCredentials(userCredentials)
     }
-    claims.addOptions(authenticationOptions)
 
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
@@ -59,7 +61,12 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
     http(req > as[User].eitherApiError)
   }
 
-  override def createUserGroup(userGroup: UserGroup)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
+  override def addUserGroups(id: String, groups: Set[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Any]] = {
+    val req = jsonApi(iam / `user/{id}/groups`(id)).withAuth << write(groups)
+    http(req.PUT > response.eitherApiError)
+  }
+
+  override def createGroup(userGroup: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
     val req = jsonApi(iam / group).withAuth << write(userGroup)
     http(req > response.eitherApiError).map(resp => resp.right.map {
       _.getHeader(HttpHeaders.Names.LOCATION) match {
@@ -70,12 +77,11 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   }
 
   private def doAuthenticate(assertionParam: String)(implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val req = jsonApi(iam / `oauth/token`) <<
-      compact(render((assertion -> assertionParam) ~ (grant_type -> `jwt-bearer`)))
+    val req = (iam / `oauth/token`).formContentType.acceptJson << Seq((assertion, assertionParam),(grant_type, `jwt-bearer`))
     http(req > as[AuthenticationResponse].eitherApiError)
   }
 
-  private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HmacSHA256)
+  private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HS256)
 
   private def as[T](implicit ct: Manifest[T]) = (response: Response) => read[T](response.getResponseBodyAsStream)
   private def response = (response: Response) => response
@@ -90,6 +96,7 @@ object IamClient {
   private val `oauth/token` = "v1.0/oauth/token"
   private def `user/{id}`(id: String) = s"v1.0/user/$id"
   private val `user/me` = `user/{id}`("me")
+  private def `user/{id}/groups`(id:String) = s"v1.0/user/$id/groups"
   private val group = "v1.0/group"
 
   private val assertion = "assertion"
