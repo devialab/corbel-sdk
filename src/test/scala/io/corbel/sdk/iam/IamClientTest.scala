@@ -8,10 +8,12 @@ import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.HttpRequest._
 import org.mockserver.model.HttpResponse._
+import org.mockserver.model.RegexBody
 import org.mockserver.model.JsonSchemaBody._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -26,7 +28,8 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   var mockServer: ClientAndServer = null
   implicit val config = CorbelConfig(
     iamBaseUri = "http://localhost:1080",
-    resourceBaseUri = "http://localhost:1080"
+    resourceBaseUri = "http://localhost:1080",
+    defaultTokenExpiration = 300000 millis
   )
   val clientId = "123"
   val cleintSecret = "567"
@@ -141,7 +144,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
     implicit val auth = AuthenticationProvider(testToken)
     val iam = IamClient()
-    val futureResponse = iam.createUserGroup(UserGroup(
+    val futureResponse = iam.createGroup(Group(
       name = Some("test-group"),
       domain = Some("test"),
       scopes = Some(Seq("test-scope"))
@@ -158,15 +161,8 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   def authenticationRequest = request()
     .withMethod("POST")
     .withPath("/v1.0/oauth/token")
-    .withBody(jsonSchema(
-      """
-        |{
-        | "type":"object", "properties":{
-        |   "assertion": {"type": "string"},
-        |   "grant_type": {"type": "string"}
-        | }
-        |}
-      """.stripMargin))
+    .withHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+    .withBody(RegexBody.regex("assertion=.+&grant_type=.+"))
 
   def getUserRequest(userId: String) = request()
       .withMethod("GET")

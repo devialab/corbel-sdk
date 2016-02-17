@@ -1,8 +1,11 @@
 package io.corbel.sdk.iam
 
-import org.json4s.JsonAST.{JString, JValue}
+import io.corbel.sdk.config.CorbelConfig
+import io.corbel.sdk.iam.Claims.{TokenExpiration, RefreshToken}
+import org.json4s.JsonAST.{JInt, JString, JValue}
 import org.json4s.native.JsonMethods._
 import org.scalatest.{FlatSpec, Matchers}
+import scala.concurrent.duration._
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
@@ -13,7 +16,7 @@ class ClaimsTest extends FlatSpec with Matchers {
   it should "add client iss" in {
     val clientId = "123"
     val clientCreds = ClientCredentials(clientId, "secret")
-    val claims = Claims().addClientCredentials(clientCreds)
+    val claims = Claims.default() + clientCreds
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveIss(json, clientId)
@@ -21,17 +24,47 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   it should "add refresh_token" in {
     val refreshToken = "123"
-    val claims = Claims().addRefreshToken(refreshToken)
+    val claims = Claims.default + RefreshToken(refreshToken)
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveRefreshToken(json, refreshToken)
+  }
+
+  it should "add refresh_token and exp" in {
+    val exp = 3000
+    val refreshToken = "123"
+    val claims = Claims.default() + RefreshToken(refreshToken) + TokenExpiration(exp)
+    val json = parse(claims.toJson)
+    shouldHaveAudience(json)
+    shouldHaveExp(json, exp)
+    shouldHaveRefreshToken(json, refreshToken)
+  }
+
+  it should "add exp" in {
+    val exp = 3000
+    val claims = Claims.default() + TokenExpiration(exp)
+    val json = parse(claims.toJson)
+    shouldHaveAudience(json)
+    shouldHaveExp(json, exp)
+  }
+
+  it should "add exp from implict config" in {
+    implicit val config = CorbelConfig(
+      iamBaseUri = "",
+      resourceBaseUri = "",
+      defaultTokenExpiration = 5 minutes
+    )
+    val claims = Claims.default()
+    val json = parse(claims.toJson)
+    shouldHaveAudience(json)
+    (json \ Claims.exp) should not be(null)
   }
 
   it should "add options" in {
     val clientVersion = "1.0"
     val deviceId = "123"
     val options = AuthenticationOptions(Some(clientVersion), Some(deviceId))
-    val claims = Claims().addOptions(options)
+    val claims = Claims.default() + options
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveVersion(json, clientVersion)
@@ -40,7 +73,7 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   it should "add basic user credentials" in {
     val userCreds = BasicUserCredentials("test-user", "secret")
-    val claims = Claims().addUserCredentials(userCreds)
+    val claims = Claims.default() + userCreds
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHavePassword(json, userCreds.password)
@@ -49,7 +82,7 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   it should "add oauth1 user credentials" in {
     val userCreds = Oauth1UserCredentials("twitter", "1234", "567")
-    val claims = Claims().addUserCredentials(userCreds)
+    val claims = Claims.default() + userCreds
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveService(json, userCreds.service)
@@ -59,7 +92,7 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   it should "add oauth2 user credentials" in {
     val userCreds = Oauth2UserCredentials("facebook", Oauth2AccessToken("access"), "redirect")
-    val claims = Claims().addUserCredentials(userCreds)
+    val claims = Claims.default + userCreds
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
     shouldHaveService(json, userCreds.service)
@@ -67,7 +100,7 @@ class ClaimsTest extends FlatSpec with Matchers {
     shouldHaveRedirectUri(json, userCreds.redirectUri)
 
     val userCreds2 = Oauth2UserCredentials("facebook", Oauth2Code("_code"), "redirect")
-    val json2 = parse(Claims().addUserCredentials(userCreds2).toJson)
+    val json2 = parse((Claims.default() + userCreds2).toJson)
     shouldHaveCode(json2, "_code")
   }
 
@@ -80,6 +113,9 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   def shouldHaveRefreshToken(json: JValue, value: String) =
     hasValue(json,"refresh_token",value)
+
+  def shouldHaveExp(json: JValue, value: Long) =
+    hasValue(json,"exp",value)
 
   def shouldHaveVersion(json: JValue, value: String) =
     hasValue(json,"version",value)
@@ -114,4 +150,7 @@ class ClaimsTest extends FlatSpec with Matchers {
 
   def hasValue(json: JValue, key: String, value: String) =
     (json \ key) should be(JString(value))
+
+  def hasValue(json: JValue, key: String, value: Long) =
+    (json \ key) should be(JInt(value))
 }

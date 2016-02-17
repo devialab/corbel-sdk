@@ -7,6 +7,7 @@ import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
 import io.corbel.sdk.http.CorbelHttpClient
+import io.corbel.sdk.iam.Claims.RefreshToken
 import io.corbel.sdk.iam.IamClient._
 import org.jboss.netty.handler.codec.http.HttpHeaders
 import org.json4s.DefaultFormats
@@ -29,38 +30,39 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
 
   override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)
                                     (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val claims = Claims()
-      .addClientCredentials(clientCredentials)
-      .addRefreshToken(refreshToken)
-      .addOptions(authenticationOptions)
+    val claims = Claims.default() + clientCredentials + RefreshToken(refreshToken) + authenticationOptions
 
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
   override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)
                            (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val claims = Claims()
-      .addClientCredentials(clientCredentials)
+    var claims = Claims.default() + clientCredentials + authenticationOptions
+
     for (userCredentials <- userCredentials) {
-      claims.addUserCredentials(userCredentials)
+      claims += userCredentials
     }
-    claims.addOptions(authenticationOptions)
 
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
   override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
-    val req = jsonApi(iam / `user/me`).withAuth
+    val req = (iam / `user/me`).json.withAuth
     http(req > as[User].eitherApiError)
   }
 
   override def getUser(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] = {
-    val req = jsonApi(iam / `user/{id}`(id)).withAuth
+    val req = (iam / `user/{id}`(id)).json.withAuth
     http(req > as[User].eitherApiError)
   }
 
-  override def createUserGroup(userGroup: UserGroup)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
-    val req = jsonApi(iam / group).withAuth << write(userGroup)
+  override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = {
+    val req = (iam / `user/{id}/groups`(userId)).json.withAuth << write(groups)
+    http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
+  }
+
+  override def createGroup(userGroup: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = {
+    val req = (iam / group).json.withAuth << write(userGroup)
     http(req > response.eitherApiError).map(resp => resp.right.map {
       _.getHeader(HttpHeaders.Names.LOCATION) match {
         case GroupId(id) => id
@@ -70,12 +72,11 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   }
 
   private def doAuthenticate(assertionParam: String)(implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]] = {
-    val req = jsonApi(iam / `oauth/token`) <<
-      compact(render((assertion -> assertionParam) ~ (grant_type -> `jwt-bearer`)))
+    val req = (iam / `oauth/token`).formUrlEncoded.acceptJson << Seq((assertion, assertionParam),(grant_type, `jwt-bearer`))
     http(req > as[AuthenticationResponse].eitherApiError)
   }
 
-  private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HmacSHA256)
+  private def buildAssertion(claims: Claims, secret: String) = Jwt.encode(claims.toJson, key = secret, algorithm = JwtAlgorithm.HS256)
 
   private def as[T](implicit ct: Manifest[T]) = (response: Response) => read[T](response.getResponseBodyAsStream)
   private def response = (response: Response) => response
@@ -90,6 +91,7 @@ object IamClient {
   private val `oauth/token` = "v1.0/oauth/token"
   private def `user/{id}`(id: String) = s"v1.0/user/$id"
   private val `user/me` = `user/{id}`("me")
+  private def `user/{id}/groups`(id:String) = s"v1.0/user/$id/groups"
   private val group = "v1.0/group"
 
   private val assertion = "assertion"
