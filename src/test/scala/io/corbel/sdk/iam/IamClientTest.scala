@@ -1,6 +1,6 @@
 package io.corbel.sdk.iam
 
-import io.corbel.sdk.AuthenticationProvider
+import io.corbel.sdk.auth.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import org.json4s.JsonAST.JObject
@@ -115,7 +115,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
     implicit val auth = AuthenticationProvider(testToken)
     val iam = IamClient()
-    val futureResponse = iam.getUser(userId)
+    val futureResponse = iam.getUserbyId(userId)
 
     whenReady(futureResponse) { response =>
       response should be(Right(User(

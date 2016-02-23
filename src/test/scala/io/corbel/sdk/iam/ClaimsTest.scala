@@ -2,7 +2,7 @@ package io.corbel.sdk.iam
 
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.iam.Claims.{TokenExpiration, RefreshToken}
-import org.json4s.JsonAST.{JInt, JString, JValue}
+import org.json4s.JsonAST._
 import org.json4s.native.JsonMethods._
 import org.scalatest.{FlatSpec, Matchers}
 import scala.concurrent.duration._
@@ -54,10 +54,10 @@ class ClaimsTest extends FlatSpec with Matchers {
       resourceBaseUri = "",
       defaultTokenExpiration = 5 minutes
     )
-    val claims = Claims.default()
+    val claims = Claims.default
     val json = parse(claims.toJson)
     shouldHaveAudience(json)
-    (json \ Claims.exp) should not be(null)
+    (json \ Claims.exp) should not be(JNothing)
   }
 
   it should "add options" in {

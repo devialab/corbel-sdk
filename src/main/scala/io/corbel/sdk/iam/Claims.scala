@@ -40,7 +40,7 @@ object Claims {
   case class RefreshToken(token: String)
   case class TokenExpiration(timestamp: Long)
   object TokenExpiration {
-    def apply(duration: Duration): TokenExpiration = TokenExpiration(Instant.now().plusMillis(duration.toMillis).toEpochMilli)
+    def apply(duration: Duration): TokenExpiration = TokenExpiration(Instant.now().plusMillis(duration.toMillis).toEpochMilli / 1000)
   }
 
   def apply() = new Claims()

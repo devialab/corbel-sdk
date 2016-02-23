@@ -1,6 +1,6 @@
 package io.corbel.sdk.iam
 
-import io.corbel.sdk.AuthenticationProvider
+import io.corbel.sdk.auth.AuthenticationProvider._
 import io.corbel.sdk.error.ApiError
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,15 +23,15 @@ trait Iam {
 
   /* ----------------- Users ---------------------- */
 
-  def getUser(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]]
+  def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,User]]
 
-  def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]]
+  def getUser(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,User]]
 
-  def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,Unit]]
+  def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Unit]]
 
   /* ----------------- Groups ---------------------- */
 
-  def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,String]]
+  def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,String]]
 }
 
 

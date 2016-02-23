@@ -1,17 +1,17 @@
-package io.corbel.sdk
+package io.corbel.sdk.auth
 
-import io.corbel.sdk.iam.AuthenticationResponse
+import io.corbel.sdk.config.CorbelConfig
+import io.corbel.sdk.iam._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Wraps a factory function which returns a Corbel access token
   *
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
-class AuthenticationProvider(f: => String) extends (() => String) {
-  override def apply(): String = f
-}
-
 object AuthenticationProvider {
+  type AuthenticationProvider = (() => Future[String])
   /**
     * Create a AuthenticationProvider from an AuthenticationResponse
     *
@@ -22,5 +22,5 @@ object AuthenticationProvider {
     authResponse.accessToken
   }
 
-  def apply(f: => String): AuthenticationProvider = new AuthenticationProvider(f)
+  def apply(f: => String): AuthenticationProvider = () => Future.successful(f)
 }
