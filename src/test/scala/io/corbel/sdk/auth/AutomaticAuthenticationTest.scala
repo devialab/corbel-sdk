@@ -86,6 +86,8 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = authenticationRefreshStub(clientCredentials, refreshToken, authenticationOptions, ec)
 
     override def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = createGroupStub(group, authenticationProvider, ec)
+
+    override def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Scope]] = ???
   }
 
 }

@@ -21,6 +21,10 @@ trait Iam {
                             authenticationOptions: AuthenticationOptions = AuthenticationOptions.default)
                             (implicit ec: ExecutionContext): Future[Either[ApiError,AuthenticationResponse]]
 
+  /* ----------------- Scopes ---------------------- */
+
+  def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Scope]]
+
   /* ----------------- Users ---------------------- */
 
   def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,User]]
