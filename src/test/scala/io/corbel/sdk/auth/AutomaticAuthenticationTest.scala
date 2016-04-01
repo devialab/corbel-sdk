@@ -75,17 +75,20 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     val authenticationRefreshStub = stubFunction[ClientCredentials, String, AuthenticationOptions, ExecutionContext, Future[Either[ApiError, AuthenticationResponse]]]
     val createGroupStub = stubFunction[Group, AuthenticationProvider, ExecutionContext, Future[Either[ApiError, String]]]
 
-    override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
+    override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = ???
+
+    override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = ???
+
+    override def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Scope]] = ???
 
     override def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
     override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
-    override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = authenticateStub(clientCredentials, userCredentials, authenticationOptions, ec)
+    override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
 
-    override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = authenticationRefreshStub(clientCredentials, refreshToken, authenticationOptions, ec)
+    override def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = ???
 
-    override def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = createGroupStub(group, authenticationProvider, ec)
   }
 
 }
