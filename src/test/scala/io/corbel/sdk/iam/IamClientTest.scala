@@ -13,8 +13,8 @@ import org.mockserver.model.JsonSchemaBody._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -89,6 +89,45 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "getScope"
+
+  it should "make request to GET scope by Id" in {
+    val scopeId = "myScope"
+    mockServer
+      .when(getScopeRequest(scopeId))
+      .respond(
+        response()
+          .withStatusCode(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              |{
+              |  "id": "scopeId",
+              |  "type": "scopeType",
+              |  "audience": "scopeAudience",
+              |  "rules": [],
+              |  "scopes": [],
+              |  "parameters": {}
+              |}
+            """.stripMargin)
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.getScope(scopeId)
+
+    whenReady(futureResponse) { response =>
+      response should be(Right(Scope(
+        id = Some("scopeId"),
+        `type` = Some("scopeType"),
+        audience = Some("scopeAudience"),
+        rules = Some(Seq.empty),
+        scopes = Some(Seq.empty),
+        parameters = Some(JObject())
+      )))
+    }
+  }
+
   behavior of "getUser"
 
   it should "make request to GET user by Id" in {
@@ -157,12 +196,17 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   }
 
 
-  /* ---------------- helper methods -- */
+  /* ---------------- helper methods ---------------- */
   def authenticationRequest = request()
     .withMethod("POST")
     .withPath("/v1.0/oauth/token")
     .withHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
     .withBody(RegexBody.regex("assertion=.+&grant_type=.+"))
+
+  def getScopeRequest(scopeId: String) = request()
+    .withMethod("GET")
+    .withPath(s"/v1.0/scope/$scopeId")
+    .withHeader("Authorization", s"Bearer $testToken")
 
   def getUserRequest(userId: String) = request()
       .withMethod("GET")
@@ -190,6 +234,5 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   after {
     mockServer.stop()
   }
-
 
 }

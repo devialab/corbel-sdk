@@ -45,19 +45,23 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
     doAuthenticate(buildAssertion(claims, clientCredentials.secret))
   }
 
+  override def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,Scope]] =
+    auth(token => {
+      val req = (iam / `scope/{id}`(id)).json.withAuth(token)
+      http(req > as[Scope].eitherApiError)
+    })
+
   override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
     auth(token => {
       val req = (iam / `user/me`).json.withAuth(token)
       http(req > as[User].eitherApiError)
     })
 
-
   override def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
     auth(token => {
       val req = (iam / `user/{id}`(id)).json.withAuth(token)
       http(req > as[User].eitherApiError)
     })
-
 
   override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] =
     auth(token => {
@@ -109,6 +113,7 @@ object IamClient {
   private val `user/me` = `user/{id}`("me")
   private def `user/{id}/groups`(id:String) = s"v1.0/user/$id/groups"
   private val group = "v1.0/group"
+  private def `scope/{id}`(id: String) = s"v1.0/scope/$id"
 
   private val assertion = "assertion"
   private val grant_type = "grant_type"
