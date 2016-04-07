@@ -3,7 +3,7 @@ package io.corbel.sdk.iam
 import io.corbel.sdk.auth.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
-import org.json4s.JsonAST.{JArray, JObject}
+import org.json4s.JsonAST.JObject
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.HttpRequest._
@@ -196,7 +196,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   }
 
 
-  /* ---------------- helper methods -- */
+  /* ---------------- helper methods ---------------- */
   def authenticationRequest = request()
     .withMethod("POST")
     .withPath("/v1.0/oauth/token")
