@@ -77,7 +77,6 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
             """.stripMargin)
       )
 
-    implicit val auth = AuthenticationProvider(testToken)
     val iam = new IamClient(ClientCredentials(clientId, cleintSecret), Optional.empty(), Optional.empty(), config)
     val futureResponse = iam.getScope(scopeId)
 
