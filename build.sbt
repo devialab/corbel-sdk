@@ -16,6 +16,9 @@ libraryDependencies ++= Seq(
   "org.mock-server" % "mockserver-netty" % "3.10.1" % "test" exclude("ch.qos.logback", "logback-classic")
 )
 
+//Run test in serial because of Mock server
+parallelExecution := false
+
 //publish settings
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
