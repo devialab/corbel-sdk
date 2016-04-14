@@ -39,6 +39,10 @@ private [sdk] trait AutomaticAuthentication extends Iam with Logging {
       super.getUserbyId(id)(p, ec)
     }
 
+  abstract override def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider = authProvider, ec: ExecutionContext): Future[Either[ApiError, Scope]] =
+    withRefreshTokenProvider { p: AuthenticationProvider =>
+      super.getScope(id)(p, ec)
+    }
 
   private def withRefreshTokenProvider[T](block: AuthenticationProvider => Future[Either[ApiError,T]])(implicit authenticationProvider: AuthenticationProvider): Future[Either[ApiError,T]] =
     block(authenticationProvider).flatMap({
