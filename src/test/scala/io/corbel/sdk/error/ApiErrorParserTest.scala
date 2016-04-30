@@ -45,7 +45,7 @@ class ApiErrorParserTest extends FlatSpec with Matchers with MockFactory {
     val responseMock = mock[Response]
     (responseMock.getStatusCode _).expects().anyNumberOfTimes().returning(500)
     (responseMock.hasResponseBody _).expects().returning(true)
-    (responseMock.getResponseBody _).expects().returning(body)
+    (responseMock.getResponseBody _).expects().anyNumberOfTimes().returning(body)
     (responseMock.getResponseBodyAsStream _).expects().returning(new ByteArrayInputStream(body.getBytes()))
 
     val result = parser.apply(responseMock)
