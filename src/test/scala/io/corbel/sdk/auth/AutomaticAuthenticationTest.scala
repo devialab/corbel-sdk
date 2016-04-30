@@ -1,5 +1,6 @@
 package io.corbel.sdk.auth
 
+import grizzled.slf4j.Logging
 import io.corbel.sdk.auth.AuthenticationProvider.AuthenticationProvider
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
@@ -7,14 +8,15 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, FlatSpec}
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{Await, Future, ExecutionContext}
 import ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
-class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactory with ScalaFutures {
+class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactory with ScalaFutures with Logging {
 
   val testToken = "TTTT"
   val testRefreshToken = "XXXXX"
@@ -56,15 +58,50 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   it should "retry when received authentication error (401)" in {
     val iam = new IamSub with AutomaticAuthentication {
       override val authenticationOptions: AuthenticationOptions = AuthenticationOptions.default
+      override val userCredentials: Option[UserCredentials] = Some(BasicUserCredentials("user", "passwd"))
+      override implicit val executionContext: ExecutionContext = ExecutionContext.global
+      override val clientCredentials: ClientCredentials = testClientCredentials
+    }
+
+    iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
+    iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
+
+    val validAuth = (g: Group, authProvider: AuthenticationProvider, ec: ExecutionContext) => {
+      val token = Await.result(authProvider.apply(), 1 second)
+      info(s"Auth with token: $token")
+      token == testToken
+    }
+
+    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Right("GroupCreated")))
+
+    whenReady(iam.createGroup(Group())) { response =>
+      response should be(Right("GroupCreated"))
+    }
+  }
+
+  it should "should not loop indefinitely on access forbidden" in {
+    val iam = new IamSub with AutomaticAuthentication {
+      override val authenticationOptions: AuthenticationOptions = AuthenticationOptions.default
       override val userCredentials: Option[UserCredentials] = None
       override implicit val executionContext: ExecutionContext = ExecutionContext.global
       override val clientCredentials: ClientCredentials = testClientCredentials
     }
-    iam.createGroupStub.when(*, *, *).once().returning(Future.successful(Left(ApiError(401))))
-    iam.createGroupStub.when(*, *, *).once().returning(Future.successful(Right("GroupCreated")))
+
+    iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
+    iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
+
+    val validAuth = (g: Group, authProvider: AuthenticationProvider, ec: ExecutionContext) => {
+      val token = Await.result(authProvider.apply(), 1 second)
+      info(s"Auth with token: $token")
+      token == testToken
+    }
+
+    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
 
     whenReady(iam.createGroup(Group())) { response =>
-      response should be(Right("GroupCreated"))
+      response should be(Left(ApiError(401)))
     }
   }
 

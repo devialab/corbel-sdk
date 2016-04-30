@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   "org.clapper" %% "grizzled-slf4j" % "1.0.2",
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
   // Test dependencies
+  "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
   "org.mock-server" % "mockserver-netty" % "3.10.1" % "test" exclude("ch.qos.logback", "logback-classic")
