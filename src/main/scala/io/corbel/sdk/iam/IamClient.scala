@@ -69,6 +69,16 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
       http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
     })
 
+
+  override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): dispatch.Future[Either[ApiError, Unit]] = user.id match {
+    case Some(userId) => auth(token => {
+      val req = (iam / `user/{id}`(userId)).json.withAuth(token) << write(user.copy(id = None))
+      http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
+    })
+    case None => Future.failed(new IllegalArgumentException("User must have an id"))
+  }
+
+
   override def createGroup(userGroup: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] =
     auth(token => {
       val req = (iam / group).json.withAuth(token) << write(userGroup)
