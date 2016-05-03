@@ -40,7 +40,7 @@ private [sdk] trait AutomaticAuthentication extends Iam with Logging {
       super.getUserbyId(id)(p, ec)
     }
 
-  override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[User]]] =
+  abstract override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[User]]] =
     withRefreshTokenProvider { p: AuthenticationProvider =>
       super.findUsers(params)(p, ec)
     }
