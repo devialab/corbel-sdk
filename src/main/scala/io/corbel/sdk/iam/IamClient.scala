@@ -2,6 +2,7 @@ package io.corbel.sdk.iam
 
 import com.ning.http.client.Response
 import dispatch._
+import io.corbel.sdk.api.{ApiImplicits, RequestParams}
 import io.corbel.sdk.auth.AuthenticationProvider._
 import io.corbel.sdk.auth.AutomaticAuthentication
 import io.corbel.sdk.config.CorbelConfig
@@ -23,7 +24,7 @@ import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Future}
   *
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
-class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam {
+class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam with ApiImplicits {
 
   implicit val formats = DefaultFormats
 
@@ -79,6 +80,13 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   }
 
 
+  override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): dispatch.Future[Either[ApiError, Seq[User]]] = {
+    auth(token => {
+      val req = (iam / user).json.withAuth(token) <<? params
+      http(req > as[Seq[User]].eitherApiError)
+    })
+  }
+
   override def createGroup(userGroup: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] =
     auth(token => {
       val req = (iam / group).json.withAuth(token) << write(userGroup)
@@ -119,6 +127,7 @@ object IamClient {
 
   //endpoints
   private val `oauth/token` = "v1.0/oauth/token"
+  private val user = "user"
   private def `user/{id}`(id: String) = s"v1.0/user/$id"
   private val `user/me` = `user/{id}`("me")
   private def `user/{id}/group`(id:String) = s"v1.0/user/$id/group"

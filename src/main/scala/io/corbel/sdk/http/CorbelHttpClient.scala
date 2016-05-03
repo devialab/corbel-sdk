@@ -1,6 +1,5 @@
 package io.corbel.sdk.http
 
-import io.corbel.sdk.auth.AuthenticationProvider
 import io.corbel.sdk.config.CorbelConfig
 import dispatch._
 import org.jboss.netty.handler.codec.http.HttpHeaders

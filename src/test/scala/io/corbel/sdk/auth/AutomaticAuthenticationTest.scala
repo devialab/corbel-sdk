@@ -1,6 +1,7 @@
 package io.corbel.sdk.auth
 
 import grizzled.slf4j.Logging
+import io.corbel.sdk.api.RequestParams
 import io.corbel.sdk.auth.AuthenticationProvider.AuthenticationProvider
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
@@ -119,6 +120,8 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
     override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
+
+    override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[User]]] = ???
 
     override def authenticate(clientCredentials: ClientCredentials, userCredentials: Option[UserCredentials], authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = authenticateStub(clientCredentials, userCredentials, authenticationOptions, ec)
 

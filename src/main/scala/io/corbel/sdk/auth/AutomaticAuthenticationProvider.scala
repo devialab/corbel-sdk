@@ -2,6 +2,7 @@ package io.corbel.sdk.auth
 
 
 import grizzled.slf4j.Logging
+import io.corbel.sdk.api.RequestParams
 import io.corbel.sdk.auth.AuthenticationProvider.AuthenticationProvider
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
@@ -37,6 +38,11 @@ private [sdk] trait AutomaticAuthentication extends Iam with Logging {
   abstract override def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider = authProvider, ec: ExecutionContext): Future[Either[ApiError, User]] =
     withRefreshTokenProvider { p: AuthenticationProvider =>
       super.getUserbyId(id)(p, ec)
+    }
+
+  override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[User]]] =
+    withRefreshTokenProvider { p: AuthenticationProvider =>
+      super.findUsers(params)(p, ec)
     }
 
   abstract override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider = authProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] =
