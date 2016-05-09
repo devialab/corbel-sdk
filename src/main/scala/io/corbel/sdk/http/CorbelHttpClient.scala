@@ -1,13 +1,13 @@
 package io.corbel.sdk.http
 
-import io.corbel.sdk.config.CorbelConfig
+import io.corbel.sdk.config.{HasConfig, CorbelConfig}
 import dispatch._
 import org.jboss.netty.handler.codec.http.HttpHeaders
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
-trait CorbelHttpClient {
+trait CorbelHttpClient extends HasConfig {
   import CorbelHttpClient._
   val http = Http()
 

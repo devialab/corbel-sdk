@@ -3,6 +3,7 @@ package io.corbel.sdk.auth
 import grizzled.slf4j.Logging
 import io.corbel.sdk.api.RequestParams
 import io.corbel.sdk.auth.AuthenticationProvider.AuthenticationProvider
+import io.corbel.sdk.config.{HasConfig, CorbelConfig}
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
 import org.scalamock.scalatest.MockFactory
@@ -23,6 +24,7 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   val testRefreshToken = "XXXXX"
   val testClientCredentials = ClientCredentials("_test_client", "_test_secret")
   val iamMock = mock[Iam]
+  val testConfig = CorbelConfig("http://localhost:1", "http://localhost:2")
 
   "AutomaticAuthenticationProvider" should "request a new token from IAM" in {
     (iamMock.authenticate(_: ClientCredentials, _: Option[UserCredentials], _: AuthenticationOptions)(_: ExecutionContext)).expects(testClientCredentials, None, AuthenticationOptions.default, *).returning(Future.successful(Right(AuthenticationResponse(testToken, System.currentTimeMillis(), Some(testRefreshToken)))))
@@ -38,14 +40,14 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   it should "call authenticate and authentication refresh" in {
     val iam = new IamSub with AutomaticAuthentication {
       override val authenticationOptions: AuthenticationOptions = AuthenticationOptions.default
-      override val userCredentials: Option[UserCredentials] = None
+      override val userCredentials: Option[UserCredentials] = Some(BasicUserCredentials("user","pass"))
       override implicit val executionContext: ExecutionContext = ExecutionContext.global
       override val clientCredentials: ClientCredentials = testClientCredentials
+      override val authClient: AuthenticationClient = this
     }
-    iam.authenticateStub.when(testClientCredentials, None, *, *).once().returning(Future.successful(Right(AuthenticationResponse(testToken, 0, Some(testRefreshToken)))))
+    iam.authenticateStub.when(testClientCredentials, *, *, *).once().returning(Future.successful(Right(AuthenticationResponse(testToken, 0, Some(testRefreshToken)))))
     iam.authenticationRefreshStub.when(testClientCredentials, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0, Some(testRefreshToken)))))
-    iam.createGroupStub.when(*, *, *).once().onCall((_,provider,_) => {
-      provider.apply()
+    iam.createGroupStub.when(*, *, *).once().onCall((_,token,_) => {
       Future.successful(Left(ApiError(401)))
     })
 
@@ -62,13 +64,13 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
       override val userCredentials: Option[UserCredentials] = Some(BasicUserCredentials("user", "passwd"))
       override implicit val executionContext: ExecutionContext = ExecutionContext.global
       override val clientCredentials: ClientCredentials = testClientCredentials
+      override val authClient: AuthenticationClient = this
     }
 
     iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
     iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
 
-    val validAuth = (g: Group, authProvider: AuthenticationProvider, ec: ExecutionContext) => {
-      val token = Await.result(authProvider.apply(), 1 second)
+    val validAuth = (g: Group, token: String, ec: ExecutionContext) => {
       info(s"Auth with token: $token")
       token == testToken
     }
@@ -87,13 +89,13 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
       override val userCredentials: Option[UserCredentials] = None
       override implicit val executionContext: ExecutionContext = ExecutionContext.global
       override val clientCredentials: ClientCredentials = testClientCredentials
+      override val authClient: AuthenticationClient = this
     }
 
     iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
     iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
 
-    val validAuth = (g: Group, authProvider: AuthenticationProvider, ec: ExecutionContext) => {
-      val token = Await.result(authProvider.apply(), 1 second)
+    val validAuth = (g: Group, token: String, ec: ExecutionContext) => {
       info(s"Auth with token: $token")
       token == testToken
     }
@@ -107,11 +109,11 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   }
 
 
-  class IamSub extends Iam {
-
+  class IamSub extends Iam with UsesAuthentication with HasConfig {
     val authenticateStub = stubFunction[ClientCredentials, Option[UserCredentials], AuthenticationOptions, ExecutionContext, Future[Either[ApiError,AuthenticationResponse]]]
     val authenticationRefreshStub = stubFunction[ClientCredentials, String, AuthenticationOptions, ExecutionContext, Future[Either[ApiError, AuthenticationResponse]]]
-    val createGroupStub = stubFunction[Group, AuthenticationProvider, ExecutionContext, Future[Either[ApiError, String]]]
+    val createGroupStub = stubFunction[Group, String, ExecutionContext, Future[Either[ApiError, String]]]
+    override implicit val config: CorbelConfig = testConfig
 
     override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
 
@@ -127,7 +129,7 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
 
     override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions)(implicit ec: ExecutionContext): Future[Either[ApiError, AuthenticationResponse]] = authenticationRefreshStub(clientCredentials, refreshToken, authenticationOptions, ec)
 
-    override def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = createGroupStub(group, authenticationProvider, ec)
+    override def createGroup(group: Group)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = auth { token => createGroupStub(group, token, ec) }
 
     override def getScope(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Scope]] = ???
   }

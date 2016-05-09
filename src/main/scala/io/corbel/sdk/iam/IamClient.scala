@@ -4,7 +4,7 @@ import com.ning.http.client.Response
 import dispatch._
 import io.corbel.sdk.api.{ApiImplicits, RequestParams}
 import io.corbel.sdk.auth.AuthenticationProvider._
-import io.corbel.sdk.auth.AutomaticAuthentication
+import io.corbel.sdk.auth.{UsesAuthentication, AutomaticAuthentication}
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
@@ -24,7 +24,7 @@ import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Future}
   *
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
-class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam with ApiImplicits {
+class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with Iam with ApiImplicits with UsesAuthentication {
 
   implicit val formats = DefaultFormats
 
@@ -108,7 +108,6 @@ class IamClient(implicit config: CorbelConfig) extends CorbelHttpClient with Iam
   private def as[T](implicit ct: Manifest[T]) = (response: Response) => read[T](response.getResponseBodyAsStream)
   private def response = (response: Response) => response
 
-  private def auth[T](f: String => Future[T])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[T] = authenticationProvider().flatMap(f)
 }
 
 
@@ -123,12 +122,13 @@ object IamClient {
       override val userCredentials: Option[UserCredentials] = providedUserCredentials
       override val authenticationOptions: AuthenticationOptions = providedAuthenticationOptions
       override val executionContext: ExecutionContext = providedExecutionContext
+      override val authClient: AuthenticationClient = this
     }
 
   //endpoints
   private val `oauth/token` = "v1.0/oauth/token"
-  private val user = "user"
-  private def `user/{id}`(id: String) = s"v1.0/user/$id"
+  private val user = "v1.0/user"
+  private def `user/{id}`(id: String) = s"$user/$id"
   private val `user/me` = `user/{id}`("me")
   private def `user/{id}/group`(id:String) = s"v1.0/user/$id/group"
   private val group = "v1.0/group"
