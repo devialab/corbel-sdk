@@ -29,6 +29,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   implicit val config = CorbelConfig(
     iamBaseUri = "http://localhost:1080",
     resourceBaseUri = "http://localhost:1080",
+    notificationsBaseUri = "http://localhost:1080",
     defaultTokenExpiration = 300000 millis
   )
   val clientId = "123"
@@ -154,7 +155,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
     implicit val auth = AuthenticationProvider(testToken)
     val iam = IamClient()
-    val futureResponse = iam.getUserbyId(userId)
+    val futureResponse = iam.getUserById(userId)
 
     whenReady(futureResponse) { response =>
       response should be(Right(User(

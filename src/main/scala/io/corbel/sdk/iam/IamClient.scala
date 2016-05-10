@@ -58,7 +58,7 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
       http(req > as[User].eitherApiError)
     })
 
-  override def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
+  override def getUserById(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
     auth(token => {
       val req = (iam / `user/{id}`(id)).json.withAuth(token)
       http(req > as[User].eitherApiError)

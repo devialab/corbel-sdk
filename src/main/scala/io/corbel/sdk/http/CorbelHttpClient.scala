@@ -20,6 +20,9 @@ trait CorbelHttpClient extends HasConfig {
   object resources extends CorbelService {
     override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.resourceBaseUri}/$path")
   }
+  object notifications extends CorbelService {
+    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.notificationsBaseUri}/$path")
+  }
 }
 
 object CorbelHttpClient {

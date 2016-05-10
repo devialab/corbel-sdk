@@ -27,7 +27,7 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   override def getUser(): CompletionStage[Either[ApiError, User]] = delegate.getUser.toJava
 
-  override def getUserById(id: String): CompletionStage[Either[ApiError, User]] = delegate.getUserbyId(id).toJava
+  override def getUserById(id: String): CompletionStage[Either[ApiError, User]] = delegate.getUserById(id).toJava
 
   override def authenticate(clientCredentials: ClientCredentials, userCredentials: Optional[UserCredentials], authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
     delegate.authenticate(clientCredentials, userCredentials.asScala, authenticationOptions).toJava
