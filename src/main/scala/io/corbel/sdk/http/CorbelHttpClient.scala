@@ -12,16 +12,17 @@ trait CorbelHttpClient extends HasConfig {
   val http = Http()
 
   trait CorbelService {
-    def /(path: String)(implicit config: CorbelConfig): CorbelRequest
+    val urlBase: String
+    def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${urlBase}/$path")
   }
   object iam extends CorbelService {
-    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.iamBaseUri}/$path")
+    override val urlBase = config.iamBaseUri
   }
   object resources extends CorbelService {
-    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.resourceBaseUri}/$path")
+    override val urlBase = config.resourceBaseUri
   }
   object notifications extends CorbelService {
-    override def /(path: String)(implicit config: CorbelConfig): CorbelRequest = url(s"${config.notificationsBaseUri}/$path")
+    override val urlBase = config.notificationsBaseUri
   }
 }
 

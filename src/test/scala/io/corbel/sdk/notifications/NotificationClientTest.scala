@@ -64,7 +64,7 @@ class NotificationClientTest extends FlatSpec with Matchers with BeforeAndAfter 
       )
 
     val notifications = NotificationsClient()
-    val futureResponse = notifications.sendNotification("notification", "email", new mutable.HashMap[String, String]() + ("property1" -> "value1") + ("property2" -> "value2"))
+    val futureResponse = notifications.sendNotification("notification", "email", Map[String, String]() + ("property1" -> "value1") + ("property2" -> "value2"))
 
     whenReady(futureResponse) { response => {
       response should be(Right())

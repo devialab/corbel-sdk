@@ -24,7 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class NotificationsClient(implicit val config: CorbelConfig) extends CorbelHttpClient with Notifications with UsesAuthentication {
   implicit val formats = DefaultFormats
 
-  override def sendNotification(id: String, recipient: String, properties: mutable.Map[String, String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError, Unit]] = {
+  override def sendNotification(id: String, recipient: String, properties: Map[String, String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError, Unit]] = {
     val jsonProperties = write(properties)
     auth(token => {
       val req = (notifications / send).json.withAuth(token) << s"""{"notificationId":"$id","recipient": "$recipient", "properties": $jsonProperties }"""

@@ -11,6 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait Notifications {
 
-  def sendNotification(id: String, recipient: String, properties: mutable.Map[String, String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError, Unit]]
+  def sendNotification(id: String, recipient: String, properties: Map[String, String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError, Unit]]
 
 }

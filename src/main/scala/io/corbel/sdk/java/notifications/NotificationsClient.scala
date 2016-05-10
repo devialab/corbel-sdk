@@ -10,7 +10,7 @@ import io.corbel.sdk.iam.{AuthenticationOptions, ClientCredentials, IamClient, U
 import io.corbel.sdk.notifications.NotificationsClient
 
 import scala.concurrent.ExecutionContext
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
 import scala.compat.java8.OptionConverters._
 
@@ -23,5 +23,5 @@ class NotificationsClient(clientCredentials: ClientCredentials, userCredentials:
 
   private val delegate  = NotificationsClient.withAutomaticAuthentication(clientCredentials, userCredentials.asScala, authenticationOptions.orElse(AuthenticationOptions.default), executionContext)(corbelConfig)
 
-  override def sendNotification(id: String, recipient: String, properties: util.Map[String, String]): CompletionStage[Either[ApiError, Unit]] = delegate.sendNotification(id, recipient, properties).toJava
+  override def sendNotification(id: String, recipient: String, properties: util.Map[String, String]): CompletionStage[Either[ApiError, Unit]] = delegate.sendNotification(id, recipient, properties.asScala.toMap).toJava
 }
