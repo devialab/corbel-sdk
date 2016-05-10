@@ -3,6 +3,7 @@ package io.corbel.sdk.notifications
 import io.corbel.sdk.auth.AuthenticationProvider._
 import io.corbel.sdk.error.ApiError
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -10,6 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait Notifications {
 
-  def sendNotification(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]]
+  def sendNotification(id: String, recipient: String, properties: Map[String, String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError, Unit]]
 
 }

@@ -52,6 +52,7 @@ class ClaimsTest extends FlatSpec with Matchers {
     implicit val config = CorbelConfig(
       iamBaseUri = "",
       resourceBaseUri = "",
+      notificationsBaseUri = "",
       defaultTokenExpiration = 5 minutes
     )
     val claims = Claims.default

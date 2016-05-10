@@ -30,6 +30,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   implicit val config = CorbelConfig(
     iamBaseUri = "http://localhost:1080",
     resourceBaseUri = "http://localhost:1080",
+    notificationsBaseUri = "http://localhost:1080",
     defaultTokenExpiration = 300000 millis
   )
   val clientId = "123"

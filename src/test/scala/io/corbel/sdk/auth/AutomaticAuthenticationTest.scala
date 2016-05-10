@@ -24,7 +24,7 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   val testRefreshToken = "XXXXX"
   val testClientCredentials = ClientCredentials("_test_client", "_test_secret")
   val iamMock = mock[Iam]
-  val testConfig = CorbelConfig("http://localhost:1", "http://localhost:2")
+  val testConfig = CorbelConfig("http://localhost:1", "http://localhost:2", "http://localhost:3")
 
   "AutomaticAuthenticationProvider" should "request a new token from IAM" in {
     (iamMock.authenticate(_: ClientCredentials, _: Option[UserCredentials], _: AuthenticationOptions)(_: ExecutionContext)).expects(testClientCredentials, None, AuthenticationOptions.default, *).returning(Future.successful(Right(AuthenticationResponse(testToken, System.currentTimeMillis(), Some(testRefreshToken)))))
@@ -117,7 +117,7 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
 
     override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
 
-    override def getUserbyId(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
+    override def getUserById(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
     override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
