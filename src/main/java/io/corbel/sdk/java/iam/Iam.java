@@ -32,6 +32,8 @@ public interface Iam {
 
     CompletionStage<Either<ApiError, User>> getUserById(String id);
 
+    CompletionStage<Either<ApiError, User>> getUserIdByUsername(String username);
+
     CompletionStage<Either<ApiError, User>> getUser();
 
     CompletionStage<Either<ApiError, Unit>> addGroupsToUser(String userId, Collection<String> groups);

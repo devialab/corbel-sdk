@@ -14,7 +14,6 @@ import io.corbel.sdk.notifications.NotificationsClient._
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization._
 
-import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 

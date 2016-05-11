@@ -2,9 +2,8 @@ package io.corbel.sdk.java.iam
 
 import java.util
 import java.util.Optional
-import java.util.concurrent.{ForkJoinPool, CompletionStage, Executors}
+import java.util.concurrent.{ForkJoinPool, CompletionStage}
 
-import io.corbel.sdk.auth.{AutomaticAuthentication, AuthenticationProvider}
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
@@ -25,9 +24,11 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   override def addGroupsToUser(userId: String, groups: util.Collection[String]): CompletionStage[Either[ApiError, Unit]] = delegate.addGroupsToUser(userId, groups).toJava
 
-  override def getUser(): CompletionStage[Either[ApiError, User]] = delegate.getUser.toJava
+  override def getUser: CompletionStage[Either[ApiError, User]] = delegate.getUser.toJava
 
   override def getUserById(id: String): CompletionStage[Either[ApiError, User]] = delegate.getUserById(id).toJava
+
+  override def getUserIdByUsername(username: String): CompletionStage[Either[ApiError, User]] = delegate.getUserIdByUsername(username).toJava
 
   override def authenticate(clientCredentials: ClientCredentials, userCredentials: Optional[UserCredentials], authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
     delegate.authenticate(clientCredentials, userCredentials.asScala, authenticationOptions).toJava

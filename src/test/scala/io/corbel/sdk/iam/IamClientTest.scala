@@ -170,6 +170,35 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "getUserId"
+
+  it should "make request to GET userId by username" in {
+    val username = "john.doe"
+    mockServer
+      .when(getUserIdByUsernameRequest(username))
+      .respond(
+        response()
+          .withStatusCode(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              |{
+              |  "id": "fdad3eaa19ddec84b397a9e9a2312262"
+              |}
+            """.stripMargin)
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.getUserIdByUsername(username)
+
+    whenReady(futureResponse) { response =>
+      response should be(Right(User(
+        id = Some("fdad3eaa19ddec84b397a9e9a2312262")
+      )))
+    }
+  }
+
   behavior of "createUserGroup"
 
   it should "make request to POST user group" in {
@@ -196,7 +225,6 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
   }
 
-
   /* ---------------- helper methods ---------------- */
   def authenticationRequest = request()
     .withMethod("POST")
@@ -213,6 +241,11 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
       .withMethod("GET")
       .withPath(s"/v1.0/user/$userId")
       .withHeader("Authorization", s"Bearer $testToken")
+
+  def getUserIdByUsernameRequest(username: String) = request()
+    .withMethod("GET")
+    .withPath(s"/v1.0/username/$username")
+    .withHeader("Authorization", s"Bearer $testToken")
 
   def createUserGroupRequest = request()
       .withMethod("POST")

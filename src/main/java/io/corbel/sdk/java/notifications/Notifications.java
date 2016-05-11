@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Created by ismael on 5/05/16.
+ * @author Ismael Madirolas (ismael.madirolas@devialab.com)
  */
 public interface Notifications {
 
