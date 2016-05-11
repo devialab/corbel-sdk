@@ -7,7 +7,7 @@ import scala.concurrent.duration._
   */
 case class CorbelConfig(
                          iamBaseUri: String,
-                         resourceBaseUri: String = null,
-                         notificationsBaseUri: String = null,
+                         resourceBaseUri: String,
+                         notificationsBaseUri: String,
                          defaultTokenExpiration: Duration = 59 minutes
                        )
