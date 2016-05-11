@@ -21,7 +21,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
-  * Created by ismael on 10/05/16.
+  * @author Ismael Madirolas (ismael.madirolas@devialab.com)
   */
 class NotificationClientTest extends FlatSpec with Matchers with BeforeAndAfter with ScalaFutures with PatienceConfiguration {
 

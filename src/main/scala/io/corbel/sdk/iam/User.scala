@@ -1,6 +1,6 @@
 package io.corbel.sdk.iam
 
-import org.json4s.JsonAST.{JObject, JValue}
+import org.json4s.JsonAST.JObject
 
 /**
   * @author Alexander De Leon (alex.deleon@devialab.com)

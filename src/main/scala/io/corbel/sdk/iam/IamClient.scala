@@ -64,6 +64,12 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
       http(req > as[User].eitherApiError)
     })
 
+  override def getUserIdByUsername(username: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
+    auth(token => {
+      val req = (iam / `username/{name}`(username)).json.withAuth(token)
+      http(req > as[User].eitherApiError)
+    })
+
   override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] =
     auth(token => {
       val req = (iam / `user/{id}/group`(userId)).json.withAuth(token) << write(groups)
@@ -128,7 +134,9 @@ object IamClient {
   //endpoints
   private val `oauth/token` = "v1.0/oauth/token"
   private val user = "v1.0/user"
+  private val username = "v1.0/username"
   private def `user/{id}`(id: String) = s"$user/$id"
+  private def `username/{name}`(name: String) = s"$username/$name"
   private val `user/me` = `user/{id}`("me")
   private def `user/{id}/group`(id:String) = s"v1.0/user/$id/group"
   private val group = "v1.0/group"
