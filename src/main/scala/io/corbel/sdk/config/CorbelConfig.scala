@@ -9,5 +9,6 @@ case class CorbelConfig(
                          iamBaseUri: String,
                          resourceBaseUri: String,
                          notificationsBaseUri: String,
+                         simultaneousRequestsLimit: Int = 25,
                          defaultTokenExpiration: Duration = 59 minutes
                        )
