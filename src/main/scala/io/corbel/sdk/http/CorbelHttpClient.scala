@@ -1,6 +1,7 @@
 package io.corbel.sdk.http
 
-import io.corbel.sdk.config.{HasConfig, CorbelConfig}
+import com.ning.http.client.extra.ThrottleRequestFilter
+import io.corbel.sdk.config.{CorbelConfig, HasConfig}
 import dispatch._
 import org.jboss.netty.handler.codec.http.HttpHeaders
 
@@ -8,8 +9,10 @@ import org.jboss.netty.handler.codec.http.HttpHeaders
   * @author Alexander De Leon (alex.deleon@devialab.com)
   */
 trait CorbelHttpClient extends HasConfig {
+
   import CorbelHttpClient._
-  val http = Http()
+
+  val http = Http().configure(_.addRequestFilter(new ThrottleRequestFilter(config.simultaneousRequestsLimit)))
 
   trait CorbelService {
     val urlBase: String
