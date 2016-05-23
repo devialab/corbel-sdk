@@ -24,6 +24,8 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   override def addGroupsToUser(userId: String, groups: util.Collection[String]): CompletionStage[Either[ApiError, Unit]] = delegate.addGroupsToUser(userId, groups).toJava
 
+  override def createUser(user: User): CompletionStage[Either[ApiError, String]] = delegate.createUser(user).toJava
+
   override def getUser: CompletionStage[Either[ApiError, User]] = delegate.getUser.toJava
 
   override def getUserById(id: String): CompletionStage[Either[ApiError, User]] = delegate.getUserById(id).toJava

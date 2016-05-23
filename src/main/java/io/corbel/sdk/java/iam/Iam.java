@@ -30,6 +30,8 @@ public interface Iam {
 
   /* ----------------- Users ---------------------- */
 
+    CompletionStage<Either<ApiError, String>> createUser(User user);
+
     CompletionStage<Either<ApiError, User>> getUserById(String id);
 
     CompletionStage<Either<ApiError, User>> getUserIdByUsername(String username);

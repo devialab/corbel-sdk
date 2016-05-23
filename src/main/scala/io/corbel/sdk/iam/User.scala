@@ -10,6 +10,7 @@ case class User(
                  domain: Option[String] = None,
                  username: Option[String] = None,
                  email: Option[String] = None,
+                 password: Option[String] = None,
                  firstName: Option[String] = None,
                  lastName: Option[String] = None,
                  scopes: Option[Seq[String]] = None,

@@ -17,6 +17,8 @@ trait Iam extends AuthenticationClient {
 
   /* ----------------- Users ---------------------- */
 
+  def createUser(user: User)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,String]]
+
   def getUserById(id: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,User]]
 
   def getUserIdByUsername(username: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,User]]

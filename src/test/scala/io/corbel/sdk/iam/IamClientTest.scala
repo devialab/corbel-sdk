@@ -129,6 +129,32 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "createUser"
+
+  it should "make request to POST user" in {
+    mockServer
+      .when(createUserRequest)
+      .respond(
+        response()
+          .withStatusCode(201)
+          .withHeader("Content-Type", "application/json")
+          .withHeader("Location", "http://iam/v1.0/user/1234")
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.createUser(User(
+      username = Some("test"),
+      email = Some("test@test.com"),
+      password = Some("password")
+    ))
+
+    whenReady(futureResponse) { response =>
+      response should be(Right("1234"))
+    }
+
+  }
+
   behavior of "getUser"
 
   it should "make request to GET user by Id" in {
@@ -236,6 +262,19 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     .withMethod("GET")
     .withPath(s"/v1.0/scope/$scopeId")
     .withHeader("Authorization", s"Bearer $testToken")
+
+  def createUserRequest = request()
+    .withMethod("POST")
+    .withPath("/v1.0/user")
+    .withHeader("Authorization", s"Bearer $testToken")
+    .withBody(jsonSchema(
+      """
+        |{
+        |  "username": "test",
+        |  "email": "test@test.com",
+        |  "password": "password"
+        |}
+      """.stripMargin))
 
   def getUserRequest(userId: String) = request()
       .withMethod("GET")

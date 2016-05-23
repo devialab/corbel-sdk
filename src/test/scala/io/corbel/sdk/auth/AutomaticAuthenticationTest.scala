@@ -47,6 +47,17 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     }
     iam.authenticateStub.when(testClientCredentials, *, *, *).once().returning(Future.successful(Right(AuthenticationResponse(testToken, 0, Some(testRefreshToken)))))
     iam.authenticationRefreshStub.when(testClientCredentials, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0, Some(testRefreshToken)))))
+
+    iam.createUserStub.when(*, *, *).once().onCall((_,token,_) => {
+      Future.successful(Left(ApiError(401)))
+    })
+
+    iam.createUserStub.when(*, *, *).once().returning(Future.successful(Right("UserCreated")))
+
+    whenReady(iam.createUser(User())) { response =>
+      response should be(Right("UserCreated"))
+    }
+
     iam.createGroupStub.when(*, *, *).once().onCall((_,token,_) => {
       Future.successful(Left(ApiError(401)))
     })
@@ -70,13 +81,25 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
     iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, Some(testRefreshToken)))))
 
-    val validAuth = (g: Group, token: String, ec: ExecutionContext) => {
+    val validUserAuth = (u: User, token: String, ec: ExecutionContext) => {
       info(s"Auth with token: $token")
       token == testToken
     }
 
-    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
-    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Right("GroupCreated")))
+    val validGroupAuth = (g: Group, token: String, ec: ExecutionContext) => {
+      info(s"Auth with token: $token")
+      token == testToken
+    }
+
+    iam.createUserStub.when(where(validUserAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createUserStub.when(where(validUserAuth)).once().returning(Future.successful(Right("UserCreated")))
+
+    whenReady(iam.createUser(User())) { response =>
+      response should be(Right("UserCreated"))
+    }
+
+    iam.createGroupStub.when(where(validGroupAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createGroupStub.when(where(validGroupAuth)).once().returning(Future.successful(Right("GroupCreated")))
 
     whenReady(iam.createGroup(Group())) { response =>
       response should be(Right("GroupCreated"))
@@ -95,13 +118,25 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
     iam.authenticateStub.when(*, *, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
     iam.authenticationRefreshStub.when(*, testRefreshToken, *, *).returning(Future.successful(Right(AuthenticationResponse(testToken, 0l, None))))
 
-    val validAuth = (g: Group, token: String, ec: ExecutionContext) => {
+    val validUserAuth = (u: User, token: String, ec: ExecutionContext) => {
       info(s"Auth with token: $token")
       token == testToken
     }
 
-    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
-    iam.createGroupStub.when(where(validAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    val validGroupAuth = (g: Group, token: String, ec: ExecutionContext) => {
+      info(s"Auth with token: $token")
+      token == testToken
+    }
+
+    iam.createUserStub.when(where(validUserAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createUserStub.when(where(validUserAuth)).once().returning(Future.successful(Left(ApiError(401))))
+
+    whenReady(iam.createUser(User())) { response =>
+      response should be(Left(ApiError(401)))
+    }
+
+    iam.createGroupStub.when(where(validGroupAuth)).once().returning(Future.successful(Left(ApiError(401))))
+    iam.createGroupStub.when(where(validGroupAuth)).once().returning(Future.successful(Left(ApiError(401))))
 
     whenReady(iam.createGroup(Group())) { response =>
       response should be(Left(ApiError(401)))
@@ -112,10 +147,13 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
   class IamSub extends Iam with UsesAuthentication with HasConfig {
     val authenticateStub = stubFunction[ClientCredentials, Option[UserCredentials], AuthenticationOptions, ExecutionContext, Future[Either[ApiError,AuthenticationResponse]]]
     val authenticationRefreshStub = stubFunction[ClientCredentials, String, AuthenticationOptions, ExecutionContext, Future[Either[ApiError, AuthenticationResponse]]]
+    val createUserStub = stubFunction[User, String, ExecutionContext, Future[Either[ApiError, String]]]
     val createGroupStub = stubFunction[Group, String, ExecutionContext, Future[Either[ApiError, String]]]
     override implicit val config: CorbelConfig = testConfig
 
     override def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
+
+    override def createUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] = auth { token => createUserStub(user, token, ec) }
 
     override def getUserById(id: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
