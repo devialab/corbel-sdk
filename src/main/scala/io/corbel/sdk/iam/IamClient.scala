@@ -52,6 +52,17 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
       http(req > as[Scope].eitherApiError)
     })
 
+  override def createUser(entity: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, String]] =
+    auth(token => {
+      val req = (iam / user).json.withAuth(token) << write(entity)
+      http(req > response.eitherApiError).map(resp => resp.right.map {
+        _.getHeader(HttpHeaders.Names.LOCATION) match {
+          case UserId(id) => id
+          case loc => throw new IllegalStateException(s"Expecting correct user URI in Location header. I got $loc")
+        }
+      })
+    })
+
   override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError,User]] =
     auth(token => {
       val req = (iam / `user/me`).json.withAuth(token)
@@ -76,7 +87,6 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
       http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
     })
 
-
   override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): dispatch.Future[Either[ApiError, Unit]] = user.id match {
     case Some(userId) => auth(token => {
       val req = (iam / `user/{id}`(userId)).json.withAuth(token) << write(user.copy(id = None))
@@ -84,7 +94,6 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
     })
     case None => Future.failed(new IllegalArgumentException("User must have an id"))
   }
-
 
   override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): dispatch.Future[Either[ApiError, Seq[User]]] = {
     auth(token => {
@@ -146,6 +155,7 @@ object IamClient {
   private val grant_type = "grant_type"
   private val `jwt-bearer` = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
+  private val UserId = """.*/user/(\w*)$""".r
   private val GroupId = """.*/group/(\w*)$""".r
 }
 
