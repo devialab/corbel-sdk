@@ -251,6 +251,28 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
 
   }
 
+  behavior of "deleteGroupToUser"
+
+  it should "make request to DELETE userId in groupId" in {
+    val userId = "12312412412"
+    val groupId = "1243151531235"
+    mockServer
+      .when(deleteGroupToUserRequest(userId, groupId))
+      .respond(
+        response()
+          .withStatusCode(204)
+          .withHeader("Content-Type", "application/json")
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.deleteGroupToUser(userId, groupId)
+
+    whenReady(futureResponse) { response =>
+      response should be(Right())
+    }
+  }
+
   /* ---------------- helper methods ---------------- */
   def authenticationRequest = request()
     .withMethod("POST")
@@ -299,6 +321,11 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
           | }
           |}
         """.stripMargin))
+
+  def deleteGroupToUserRequest(userId: String, groupId: String) = request()
+    .withMethod("DELETE")
+    .withPath(s"/v1.0/user/$userId/group/$groupId")
+    .withHeader("Authorization", s"Bearer $testToken")
 
   before {
     mockServer = startClientAndServer(1080)
