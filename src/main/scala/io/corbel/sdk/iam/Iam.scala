@@ -27,6 +27,8 @@ trait Iam extends AuthenticationClient {
 
   def addGroupsToUser(userId: String, groups: Iterable[String])(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Unit]]
 
+  def deleteGroupToUser(userId: String, groupId: String)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Unit]]
+
   def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Unit]]
 
   def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider = null, ec: ExecutionContext): Future[Either[ApiError,Seq[User]]]

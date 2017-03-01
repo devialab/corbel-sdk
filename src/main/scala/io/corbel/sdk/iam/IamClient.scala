@@ -87,6 +87,13 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
       http(req.PUT > response.eitherApiError).map(_.right.map(_ => {}))
     })
 
+  override def deleteGroupToUser(userId: String, groupId: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] =
+    auth(token => {
+      val req = (iam / `user/{id}/group/{groupId}`(userId, groupId)).json.withAuth(token)
+      http(req.DELETE > response.eitherApiError).map(_.right.map(_ => {}))
+    })
+
+
   override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): dispatch.Future[Either[ApiError, Unit]] = user.id match {
     case Some(userId) => auth(token => {
       val req = (iam / `user/{id}`(userId)).json.withAuth(token) << write(user.copy(id = None))
@@ -148,6 +155,7 @@ object IamClient {
   private def `username/{name}`(name: String) = s"$username/$name"
   private val `user/me` = `user/{id}`("me")
   private def `user/{id}/group`(id:String) = s"v1.0/user/$id/group"
+  private def `user/{id}/group/{groupId}`(id:String, groupId: String) = s"v1.0/user/$id/group/$groupId"
   private val group = "v1.0/group"
   private def `scope/{id}`(id: String) = s"v1.0/scope/$id"
 
