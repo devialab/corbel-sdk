@@ -2,3 +2,4 @@ sbt:
   build:
     image: sbt
     dockerfile_path: Dockerfile
+  cached: true
