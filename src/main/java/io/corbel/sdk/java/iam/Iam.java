@@ -38,6 +38,8 @@ public interface Iam {
 
     CompletionStage<Either<ApiError, User>> getUser();
 
+    CompletionStage<Either<ApiError, Unit>> updateUser(User user);
+
     CompletionStage<Either<ApiError, Unit>> addGroupsToUser(String userId, Collection<String> groups);
 
     CompletionStage<Either<ApiError, Unit>> deleteGroupToUser(String userId, String groupId);

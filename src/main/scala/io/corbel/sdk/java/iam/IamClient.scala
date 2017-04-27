@@ -30,6 +30,8 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   override def getUser: CompletionStage[Either[ApiError, User]] = delegate.getUser.toJava
 
+  override def updateUser(user: User): CompletionStage[Either[ApiError, Unit]] = delegate.updateUser(user).toJava
+
   override def getUserById(id: String): CompletionStage[Either[ApiError, User]] = delegate.getUserById(id).toJava
 
   override def getUserIdByUsername(username: String): CompletionStage[Either[ApiError, User]] = delegate.getUserIdByUsername(username).toJava
