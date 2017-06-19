@@ -174,6 +174,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
               |  "username": "alexander.deleon@bqreaders.com",
               |  "firstName": "alex",
               |  "scopes": [],
+              |  "groups": ["test-group"],
               |  "properties": {}
               |}
             """.stripMargin)
@@ -191,6 +192,7 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
         firstName = Some("alex"),
         username = Some("alexander.deleon@bqreaders.com"),
         scopes = Some(Seq.empty),
+        groups = Some(Seq("test-group")),
         properties = Some(JObject())
       )))
     }
