@@ -163,6 +163,8 @@ class AutomaticAuthenticationTest extends FlatSpec with Matchers with MockFactor
 
     override def getUser(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, User]] = ???
 
+    override def getUserDevices(userId: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[Device]]] = ???
+
     override def updateUser(user: User)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Unit]] = ???
 
     override def findUsers(params: RequestParams)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[User]]] = ???

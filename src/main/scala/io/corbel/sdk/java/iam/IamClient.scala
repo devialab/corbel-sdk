@@ -2,15 +2,16 @@ package io.corbel.sdk.java.iam
 
 import java.util
 import java.util.Optional
-import java.util.concurrent.{ForkJoinPool, CompletionStage}
+import java.util.concurrent.{CompletionStage, ForkJoinPool}
 
+import io.corbel.sdk.api.RequestParams
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.iam._
 
 import scala.concurrent.ExecutionContext
-
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
 import scala.compat.java8.OptionConverters._
 
@@ -21,6 +22,12 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   private implicit val executionContext = ExecutionContext.fromExecutor(new ForkJoinPool())
   private val delegate  = IamClient.withAutomaticAuthentication(clientCredentials, userCredentials.asScala, authenticationOptions.orElse(AuthenticationOptions.default), executionContext)(corbelConfig)
+
+  override def authenticate(clientCredentials: ClientCredentials, userCredentials: Optional[UserCredentials], authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
+    delegate.authenticate(clientCredentials, userCredentials.asScala, authenticationOptions).toJava
+
+  override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
+    delegate.authenticationRefresh(clientCredentials, refreshToken, authenticationOptions).toJava
 
   override def addGroupsToUser(userId: String, groups: util.Collection[String]): CompletionStage[Either[ApiError, Unit]] = delegate.addGroupsToUser(userId, groups).toJava
 
@@ -36,13 +43,14 @@ class IamClient(clientCredentials: ClientCredentials, userCredentials: Optional[
 
   override def getUserIdByUsername(username: String): CompletionStage[Either[ApiError, User]] = delegate.getUserIdByUsername(username).toJava
 
-  override def authenticate(clientCredentials: ClientCredentials, userCredentials: Optional[UserCredentials], authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
-    delegate.authenticate(clientCredentials, userCredentials.asScala, authenticationOptions).toJava
-
-  override def authenticationRefresh(clientCredentials: ClientCredentials, refreshToken: String, authenticationOptions: AuthenticationOptions): CompletionStage[Either[ApiError, AuthenticationResponse]] =
-    delegate.authenticationRefresh(clientCredentials, refreshToken, authenticationOptions).toJava
-
   override def createGroup(group: Group): CompletionStage[Either[ApiError, String]] = delegate.createGroup(group).toJava
 
   override def getScope(id: String): CompletionStage[Either[ApiError, Scope]] = delegate.getScope(id).toJava
+
+  override def getUserDevices(userId: String): CompletionStage[Either[ApiError, util.Collection[Device]]] =
+    delegate.getUserDevices(userId).map(either => implicitly[Either[ApiError, util.Collection[Device]]](either.right.map(_.asJavaCollection))).toJava
+
+  override def findUsers(params: RequestParams): CompletionStage[Either[ApiError, util.Collection[User]]] =
+    delegate.findUsers(params).map(either => implicitly[Either[ApiError, util.Collection[User]]](either.right.map(_.asJavaCollection))).toJava
+
 }

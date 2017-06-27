@@ -141,6 +141,8 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "deleteGroupToUser"
+
   it should "make request to DELETE userId in groupId" in {
     val userId = "12312412412"
     val groupId = "1243151531235"

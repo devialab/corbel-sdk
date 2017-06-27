@@ -198,6 +198,41 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
     }
   }
 
+  behavior of "getUserDevices"
+
+  it should "make request to GET user devices by userId" in {
+    val userId = "123"
+    mockServer
+      .when(getUserDevices(userId))
+      .respond(
+        response()
+          .withStatusCode(200)
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              |[{
+              |  "id": "1234",
+              |  "notificationUri": "notificationUri-1"
+              |},
+              |{
+              |  "id": "5678",
+              |  "notificationUri": "notificationUri-2"
+              |}]
+            """.stripMargin)
+      )
+
+    implicit val auth = AuthenticationProvider(testToken)
+    val iam = IamClient()
+    val futureResponse = iam.getUserDevices(userId)
+
+    whenReady(futureResponse) { response =>
+      response should be(Right(Seq(
+        Device(id = Some("1234"), notificationUri = Some("notificationUri-1")),
+        Device(id = Some("5678"), notificationUri = Some("notificationUri-2"))
+      )))
+    }
+  }
+
   behavior of "getUserId"
 
   it should "make request to GET userId by username" in {
@@ -308,6 +343,11 @@ class IamClientTest extends FlatSpec with Matchers with BeforeAndAfter with Scal
   def getUserIdByUsernameRequest(username: String) = request()
     .withMethod("GET")
     .withPath(s"/v1.0/username/$username")
+    .withHeader("Authorization", s"Bearer $testToken")
+
+  def getUserDevices(userId: String) = request()
+    .withMethod("GET")
+    .withPath(s"/v1.0/user/$userId/device")
     .withHeader("Authorization", s"Bearer $testToken")
 
   def createUserGroupRequest = request()
