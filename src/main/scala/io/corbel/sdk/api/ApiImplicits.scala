@@ -19,6 +19,11 @@ trait ApiImplicits {
     if(params.pageSize > 0) {
       map += "api:pageSize" -> params.pageSize.toString
     }
+    params.sort.map(sort => {
+      val field = sort.field
+      val direction = sort.direction
+      map += "api:sort" -> write(field -> direction.toString)
+    })
     map
   }
 

@@ -2,9 +2,9 @@ package io.corbel.sdk.iam
 
 import com.ning.http.client.Response
 import dispatch._
-import io.corbel.sdk.api.{ApiImplicits, RequestParams}
+import io.corbel.sdk.api._
 import io.corbel.sdk.auth.AuthenticationProvider._
-import io.corbel.sdk.auth.{UsesAuthentication, AutomaticAuthentication}
+import io.corbel.sdk.auth.{AutomaticAuthentication, UsesAuthentication}
 import io.corbel.sdk.config.CorbelConfig
 import io.corbel.sdk.error.ApiError
 import io.corbel.sdk.error.ApiError._
@@ -17,7 +17,7 @@ import org.json4s.native.Serialization._
 import pdi.jwt.{Jwt, JwtAlgorithm}
 import CorbelHttpClient._
 
-import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 /**
   * Iam interface implementation
@@ -83,7 +83,8 @@ class IamClient(implicit val config: CorbelConfig) extends CorbelHttpClient with
 
   override def getUserDevices(userId: String)(implicit authenticationProvider: AuthenticationProvider, ec: ExecutionContext): Future[Either[ApiError, Seq[Device]]] =
     auth(token => {
-      val req = (iam / `user/{id}/device`(userId)).json.withAuth(token)
+      var params = RequestParams(None, 0, 30, Option(SortParams(Direction.DESC, "lastConnection")))
+      val req = (iam / `user/{id}/device`(userId)).json.withAuth(token) <<? params
       http(req > as[Seq[Device]].eitherApiError)
     })
 
